@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/secrets.toml
+data/pdfs/*
+!data/pdfs/.gitkeep
+data/extracted/*
+!data/extracted/.gitkeep
+data/media/*
+!data/media/.gitkeep
+data/manifest.json
+logs/*
+!logs/.gitkeep
+vectorstore/*
+!vectorstore/.gitkeep
+'@ | Set-Content -Encoding utf8 .gitignore
