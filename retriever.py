@@ -25,6 +25,32 @@ def question_is_tamil(text: str) -> bool:
     return tamil_chars > 0 and tamil_chars >= latin_chars * 0.25
 
 
+_HASH_SUFFIX = re.compile(r"[_-][0-9a-f]{8,64}$", re.IGNORECASE)
+_PDF_EXT = re.compile(r"\.pdf$", re.IGNORECASE)
+
+
+def clean_source_title(title):
+    """Turn stored PDF filenames into readable titles.
+
+    Example: "Revamped_Operational_Guidelines_17th_August_2020.pdf_fc57c66e"
+    becomes "Revamped Operational Guidelines 17th August 2020".
+    Webpage titles (already human-readable) are returned unchanged.
+    """
+    if not title:
+        return "Official source"
+    text = title.strip()
+    looks_like_filename = " " not in text or _PDF_EXT.search(text) or ".pdf" in text.lower()
+    if not looks_like_filename:
+        return text
+    # Strip the extension and the content-hash suffix, in either order.
+    for _ in range(2):
+        text = _HASH_SUFFIX.sub("", text)
+        text = _PDF_EXT.sub("", text)
+    text = re.sub(r"[_]+", " ", text)
+    text = re.sub(r"\s+", " ", text).strip(" .-")
+    return text or "Official source"
+
+
 @lru_cache(maxsize=1)
 def load_vectorstore():
     if not OPENAI_API_KEY:
@@ -70,7 +96,7 @@ def answer_question(question: str):
     for i, (doc, score) in enumerate(matches, start=1):
         meta = doc.metadata or {}
         source = {
-            "title": meta.get("title") or meta.get("filename") or "Official source",
+            "title": clean_source_title(meta.get("title") or meta.get("filename")),
             "filename": meta.get("filename") or "",
             "url": meta.get("source") or meta.get("url") or "",
             "page": meta.get("page"),
